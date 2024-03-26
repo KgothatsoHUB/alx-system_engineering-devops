@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Update package index and install nginx
+apt-get update
+apt-get install -y nginx
+
+# Configure nginx to listen on port 80 and return Hello World! at root
+echo 'server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    root /var/www/html;
+    index index.html;
+    server_name _;
+    location / {
+        add_header X-Served-By $HOSTNAME; # Add a custom header with the server hostname
+        echo "Hello World!"; # Return Hello World! as the response at the root URL
+    }
+}' > /etc/nginx/sites-available/default
+
+# Restart nginx without using systemctl
+kill -s HUP $(pgrep nginx)
+
+# Verify nginx status
+if pgrep -x "nginx" >/dev/null; then
+    echo "Nginx is running."
+else
+    echo "Nginx is not running. Check the logs for errors."
+fi
+
