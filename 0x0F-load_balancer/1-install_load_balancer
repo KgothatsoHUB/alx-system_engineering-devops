@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# install load balancer
+# Install and configure HAProxy on lb-01 server
 
 echo -e "Updating and doing some minor checks...\n"
 
 function install() {
     command -v "$1" &> /dev/null
 
-    #shellcheck disable=SC2181
     if [ $? -ne 0 ]; then
         echo -e "       Installing: $1\n"
         sudo apt-get update -y -qq && \
@@ -20,13 +19,13 @@ function install() {
 # Install HAProxy
 install haproxy
 
-echo -e "\nSetting up some minor stuff.\n"
+echo -e "\nSetting up HAProxy...\n"
 
-# Backup default server config file
-sudo cp /etc/haproxy/haproxy.cfg haproxy_default.backup
+# Backup default HAProxy config file
+sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
 
 # Configure HAProxy
-server_config="\
+sudo tee /etc/haproxy/haproxy.cfg > /dev/null <<EOF
 defaults
   mode http
   timeout client 15s
@@ -42,15 +41,12 @@ backend clickviral-tech-backend
     balance roundrobin
     server 424715-web-01 18.234.168.198:80 check
     server 424715-web-02 54.152.232.55:80 check
-"
-
-# Write server configuration to HAProxy config file
-echo "$server_config" | sudo tee /etc/haproxy/haproxy.cfg > /dev/null
+EOF
 
 # Enable HAProxy to be started by init script
 echo "ENABLED=1" | sudo tee /etc/default/haproxy > /dev/null
 
-echo "Configured - Roundrobin On web-01 & web-02"
+echo "HAProxy configured - Roundrobin On web-01 & web-02"
 
 # Restart HAProxy service
 if [ "$(pgrep -c haproxy)" -le 0 ]; then
