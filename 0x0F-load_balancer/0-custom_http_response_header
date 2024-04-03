@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # Duplicate web-01 configuration to web-02
 # These scripts are an upgrade from the web-server scripts...
 
@@ -74,7 +75,7 @@ server_config=\
         }
 }"
 
-# Shellcheck disable=SC2154
+# Replace X-Served-By header with hostname
 echo "$server_config" | sudo dd status=none of=/etc/nginx/sites-enabled/default
 
 if [ "$(pgrep -c nginx)" -le 0 ]; then
