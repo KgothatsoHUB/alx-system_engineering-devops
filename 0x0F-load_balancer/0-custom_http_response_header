@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Duplicate web-01 configuration to web-02
 # These scripts are an upgrade from the web-server scripts...
 
@@ -13,7 +12,7 @@ function install() {
 
     # Shellcheck disable=SC2181
     if [ $? -ne 0 ]; then
-        echo -e "    Installing: $1\n"
+        echo -e "    Installing: $1$\n"
         sudo apt-get update -y -qq && \
             sudo apt-get install -y "$1" -qq
         echo -e "\n"
@@ -22,8 +21,7 @@ function install() {
     fi
 }
 
-# Install nginx
-install nginx
+install nginx # Install nginx
 
 echo -e "\nSetting up some minor stuff.\n"
 
@@ -56,27 +54,27 @@ echo "Ceci n'est pas une page" > /var/www/html/error_404.html
 # Backup default server config file
 sudo cp /etc/nginx/sites-enabled/default nginx-sites-enabled_default.backup
 
-server_config="
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html
-    server_name_;
-    add_header X-Served-By \$hostname;
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-    if (\$request_filename ~ redirect_me){
-        rewrite ^ https://th3-gr00t.tk/ permanent;
-    }
-    error_page 404 /error_404.html;
-    location = /error_404.html {
-        internal;
-    }
+server_config=\
+"server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html
+        server_name_;
+        add_header X-Served-By \$hostname;
+        location / {
+            try_files \$uri \$uri/ =404;
+        }
+        if (\$request_filename ~ redirect_me){
+            rewrite ^ https://th3-gr00t.tk/ permanent;
+        }
+        error_page 404 /error_404.html;
+        location = /error_404.html {
+            internal;
+        }
 }"
 
-# Replace X-Served-By header with hostname
+# Shellcheck disable=SC2154
 echo "$server_config" | sudo dd status=none of=/etc/nginx/sites-enabled/default
 
 if [ "$(pgrep -c nginx)" -le 0 ]; then
@@ -84,4 +82,3 @@ if [ "$(pgrep -c nginx)" -le 0 ]; then
 else
     sudo service nginx restart
 fi
-
